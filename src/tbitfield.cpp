@@ -6,15 +6,15 @@
 // Битовое поле
 
 #include "tbitfield.h"
-
+const int lenght = numeric_limits<TELEM>::digits;
 TBitField::TBitField(int len)
 {   
     if (len < 1) {
         throw "Wrong length";
     }
     BitLen = len;
-    MemLen = (len + 31) / 32;
-
+    //MemLen = bit_width(len); - не понимаю почему мой компилятятор не видит функцию bit_width хотя на cppreference она есть, правда со стандарта c++20
+    MemLen = (len + lenght - 1) / lenght;
     pMem = new TELEM[MemLen];
 
     for (int i = 0; i < MemLen; i++) {
@@ -38,21 +38,18 @@ TBitField::~TBitField()
 {
     delete[] pMem;
 }
+//вот тут додумать
+int TBitField::GetMemIndex(const int n) const noexcept // индекс Мем для бита n
+{   
+    if ((n < 0) || (n >= BitLen)) throw "Wrong index";
 
-int TBitField::GetMemIndex(const int n) const // индекс Мем для бита n
-{
-    return n / 32;
+    return (n / lenght);
 }
 
-TELEM TBitField::GetMemMask(const int n) const // битовая маска для бита n
+TELEM TBitField::GetMemMask(const int n) const noexcept // битовая маска для бита n
 {
     TELEM res;
-
-    if ((n < 0) || (n > BitLen)) {
-        throw "Wrong index";
-    }
-    if (n < sizeof(TELEM) * 8) res = 1 << (sizeof(TELEM) * 8 - n - 1);
-    else  res = 0;
+    res = TELEM(1) << (n & (lenght - 1));
 
     return res;
 }
